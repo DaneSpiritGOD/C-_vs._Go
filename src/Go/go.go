@@ -37,8 +37,8 @@ func syncSingleBenchmark(count int, iteration int, wg *sync.WaitGroup) {
 	fmt.Printf("%dth iteration finished: took %s, final value: %d\n", iteration, time.Since(start), <-input)
 }
 
-var maxIterationCount = flag.Int("iters", 10, "how many iterations")
-var pingpongCountPerIteration = flag.Int("n", 100_0000_0000, "how many pingpong in single iteration")
+var maxIterationCount = flag.Int("iters", 100, "how many iterations")
+var pingpongCountPerIteration = flag.Int("n", 1000_0000, "how many pingpong in single iteration")
 
 func main() {
 	flag.Parse()
@@ -46,10 +46,7 @@ func main() {
 	iterationCount := *maxIterationCount
 	pingpongCount := *pingpongCountPerIteration
 
-	// var fakecout, _ = os.Open("/dev/null");
-	//var fakecout, _ = os.Open("NUL")
-
-	fmt.Printf("Started, will Run %d iterations of benchmark.\n", iterationCount)
+	fmt.Printf("Started, will Run %d(iterations) * %d(ppc./iter.) of benchmark.\n", iterationCount, pingpongCount)
 
 	start := time.Now()
 	wg := &sync.WaitGroup{}
