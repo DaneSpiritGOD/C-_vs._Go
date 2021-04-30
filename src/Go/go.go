@@ -3,69 +3,61 @@ package main
 import (
 	"flag"
 	"fmt"
-	"os"
 	"sync"
 	"time"
 )
 
-func measure(start time.Time, name string) {
-	elapsed := time.Since(start)
-	fmt.Printf("%s took %s", name, elapsed)
-	fmt.Println()
+func createChan() chan int {
+	return make(chan int)
 }
 
-var maxCount = flag.Int("n", 1000000, "how many")
+func syncSingleBenchmark(count int, iteration int, wg *sync.WaitGroup) {
+	defer func() {
+		wg.Done()
+	}()
 
-func f(output, input chan int) {
-	output <- 1 + <-input
-}
+	start := time.Now()
 
-func test() {
-	fmt.Printf("Started, sending %d messages.", *maxCount)
-	fmt.Println()
-	flag.Parse()
-	defer measure(time.Now(), fmt.Sprintf("Sending %d messages", *maxCount))
-	finalOutput := make(chan int, 1)
-	var left, right chan int = nil, finalOutput
-	for i := 0; i < *maxCount; i++ {
-		left, right = right, make(chan int)
-		go f(left, right)
+	var output, input chan int = nil, createChan()
+
+	go func(in chan int) {
+		in <- 0
+	}(input)
+
+	for i := 0; i < count; i++ {
+		output = createChan()
+
+		go func(pong, ping chan int) {
+			pong <- 1 + <-ping
+		}(output, input)
+
+		input = output
 	}
-	right <- 0
-	x := <-finalOutput
-	fmt.Println(x)
+
+	fmt.Printf("%dth iteration finished: took %s, final value: %d\n", iteration, time.Since(start), <-input)
 }
 
-var wg sync.WaitGroup
-
-func test1() {
-	defer wg.Done()
-	test()
-}
-
-func testPal() {
-	var cout = os.Stdout
-	var runs = 10
-	fmt.Printf("Started, Running %d tests.", runs)
-	fmt.Println()
-	// var fakecout, _ = os.Open("/dev/null");
-	var fakecout, _ = os.Open("NUL")
-	os.Stdout = fakecout
-	wg.Add(runs)
-	defer measure(time.Now(), fmt.Sprintf("Running %d tests", runs))
-	for i := 0; i < runs; i++ {
-		go test1()
-	}
-	wg.Wait()
-	os.Stdout = cout
-}
+var maxIterationCount = flag.Int("iters", 10, "how many iterations")
+var pingpongCountPerIteration = flag.Int("n", 100_0000_0000, "how many pingpong in single iteration")
 
 func main() {
-	test()
-	test()
-	fmt.Println()
+	flag.Parse()
 
-	time.Sleep(1000 * time.Millisecond)
-	testPal()
-	fmt.Println()
+	iterationCount := *maxIterationCount
+	pingpongCount := *pingpongCountPerIteration
+
+	// var fakecout, _ = os.Open("/dev/null");
+	//var fakecout, _ = os.Open("NUL")
+
+	fmt.Printf("Started, will Run %d iterations of benchmark.\n", iterationCount)
+
+	start := time.Now()
+	wg := &sync.WaitGroup{}
+	for i := 0; i < iterationCount; i++ {
+		wg.Add(1)
+		go syncSingleBenchmark(pingpongCount, i, wg)
+	}
+	wg.Wait()
+
+	fmt.Printf("Finished totally, took %s.\n", time.Since(start))
 }
