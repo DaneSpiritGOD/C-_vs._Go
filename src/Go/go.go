@@ -11,7 +11,7 @@ func createChan() chan int {
 	return make(chan int)
 }
 
-func syncSingleBenchmark(count int, iteration int, wg *sync.WaitGroup) {
+func syncSingleBenchmark(count int, iteration int, wg *sync.WaitGroup, printDebugInfo bool) {
 	defer func() {
 		wg.Done()
 	}()
@@ -34,27 +34,37 @@ func syncSingleBenchmark(count int, iteration int, wg *sync.WaitGroup) {
 		input = output
 	}
 
-	fmt.Printf("%dth iteration finished: took %s, final value: %d\n", iteration, time.Since(start), <-input)
+	if printDebugInfo {
+		fmt.Printf("%dth iteration finished: took %s, final value: %d\n", iteration, time.Since(start), <-input)
+	}
 }
 
-var maxIterationCount = flag.Int("iters", 100, "how many iterations")
-var pingpongCountPerIteration = flag.Int("n", 1000_0000, "how many pingpong in single iteration")
+var maxIterationCount = flag.Int("iters", 10, "how many iterations")
+var pingpongCountPerIteration = flag.Int("ppc", 100_0000, "how many pingpong in single iteration")
+var debugMode = flag.Bool("debug", false, "whether to print intermediate information")
 
 func main() {
 	flag.Parse()
 
 	iterationCount := *maxIterationCount
 	pingpongCount := *pingpongCountPerIteration
+	printDebugInfo := *debugMode
 
-	fmt.Printf("Started, will Run %d(iterations) * %d(ppc./iter.) of benchmark.\n", iterationCount, pingpongCount)
+	if printDebugInfo {
+		fmt.Printf("Started, will Run %d(iterations) * %d(ppc./iter.) of benchmark.\n", iterationCount, pingpongCount)
+	}
 
 	start := time.Now()
 	wg := &sync.WaitGroup{}
 	for i := 0; i < iterationCount; i++ {
 		wg.Add(1)
-		go syncSingleBenchmark(pingpongCount, i, wg)
+		go syncSingleBenchmark(pingpongCount, i, wg, printDebugInfo)
 	}
 	wg.Wait()
 
-	fmt.Printf("Finished totally, took %s.\n", time.Since(start))
+	if printDebugInfo {
+		fmt.Printf("Finished totally, took %s.\n", time.Since(start))
+	} else {
+		fmt.Printf("%s,%d,%d,%d,%s", "go", iterationCount, pingpongCount, iterationCount*pingpongCount, time.Since(start))
+	}
 }
