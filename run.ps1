@@ -1,12 +1,12 @@
 Write-Host "building go version..."
-go build .\src\go\go.go
+go build -o .\src\go\go.exe .\src\go\go.go
 
 Write-Host "building c# version..."
 dotnet build -c Release .\src\csharp\csharp.csproj > $null
 
 Write-Host "running debug mode test..."
 
-Write-Output $null > debug.txt
+Write-Output "debug mode info" > debug.txt
 .\src\go\go.exe -iters 10 -ppc 1000000 -debug >> debug.txt
 .\src\csharp\bin\Release\net5.0\csharp.exe -iters 10 -ppc 1000000 -debug true >> debug.txt
 
