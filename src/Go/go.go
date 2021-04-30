@@ -52,7 +52,7 @@ func main() {
 	debugMode2 := *debugMode
 
 	if debugMode2 {
-		fmt.Printf("Started, will run %d(iterations) * %d(ppc./iter.) of benchmark.\n", iterationCount, pingpongCount)
+		fmt.Printf("Started go version, will run %d(iterations) * %d(ppc./iter.) of benchmark.\n", iterationCount, pingpongCount)
 	}
 
 	start := time.Now()

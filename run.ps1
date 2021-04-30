@@ -13,5 +13,9 @@ Write-Output $null > debug.txt
 Write-Host "running test..."
 
 Write-Output "lang,iters,ppc,iters*ppc,elapsed time" > result.csv
+
 .\src\go\go.exe -iters 10 -ppc 1000000 >> result.csv
 .\src\csharp\bin\Release\net5.0\csharp.exe -iters 10 -ppc 1000000 -debug false >> result.csv
+
+.\src\go\go.exe -iters 10 -ppc 10000000 >> result.csv
+.\src\csharp\bin\Release\net5.0\csharp.exe -iters 10 -ppc 10000000 -debug false >> result.csv

@@ -45,7 +45,7 @@ namespace ChannelsTest {
             var cla = CommandLineArg.Parse(args);
 
             if (cla.DebugMode) {
-		        Console.WriteLine("Started, will run {0}(iterations) * {1}(ppc./iter.) of benchmark.", cla.Iterations, cla.PingPongCountPerIteration);
+		        Console.WriteLine("Started csharp version, will run {0}(iterations) * {1}(ppc./iter.) of benchmark.", cla.Iterations, cla.PingPongCountPerIteration);
 	        }
 
             var start = DateTimeOffset.Now;
