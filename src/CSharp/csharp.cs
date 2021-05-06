@@ -12,25 +12,38 @@ using System.Diagnostics.CodeAnalysis;
 
 namespace ChannelsTest {
     public class Program {
-        static async Task Benchmark(int pingpongCount, int iteration, bool debugMode) {
+        static async Task Benchmark(int pingpongCount, int iteration, bool debugMode, bool newTask) {
             var start = DateTimeOffset.Now;
 
             var input = CreateChannel();
-
             await input.Writer.WriteAsync(0);
+
+            var coreAction = GetAction();
             for (var i = 0; i < pingpongCount; i++) {
                 var output = CreateChannel();
-                _ = PingPong(output, input);
+                coreAction(output, input);
                 input = output;
             }
 
             var finalValue = await input.Reader.ReadAsync();
             if(debugMode)
             {
-                Console.WriteLine("{0}th iteration finished: took {1}, final value: {2}", iteration, DateTimeOffset.Now - start, finalValue);                
+                Console.WriteLine("{0}th iteration finished: took {1}s, final value: {2}", iteration, SinceInSeconds(start), finalValue);                
             }
 
-            static async Task PingPong(ChannelWriter<int> out_, ChannelReader<int> in_) 
+            Action<ChannelWriter<int>, ChannelReader<int>> GetAction()
+            {
+                if (!newTask)
+                {
+                    return (output, input) => _ = PingPongWithoutNewTask(output, input);
+                }
+                else
+                {
+                    return (output, input) => Task.Run(async () => await PingPongWithoutNewTask(output, input));
+                }
+            }
+
+            static async Task PingPongWithoutNewTask(ChannelWriter<int> out_, ChannelReader<int> in_) 
             {
                 await out_.WriteAsync(1 + await in_.ReadAsync());
             }
@@ -41,11 +54,16 @@ namespace ChannelsTest {
             }
         }
 
+        static double SinceInSeconds(DateTimeOffset start)
+        {
+            return (DateTimeOffset.Now - start).TotalSeconds;
+        }
+
         static async Task Main(string[] args) {
             var cla = CommandLineArg.Parse(args);
 
             if (cla.DebugMode) {
-		        Console.WriteLine("Started csharp version, will run {0}(iterations) * {1}(ppc./iter.) of benchmark.", cla.Iterations, cla.PingPongCountPerIteration);
+		        Console.WriteLine("Started csharp version({2}), will run {0}(iterations) * {1}(ppc./iter.) of benchmark.", cla.Iterations, cla.PingPongCountPerIteration, GetVersionMark());
 	        }
 
             var start = DateTimeOffset.Now;
@@ -53,18 +71,23 @@ namespace ChannelsTest {
             var tasks = new Task[cla.Iterations];
             for (var index = 0; index < cla.Iterations; ++index) {
                 var index2 = index;
-                tasks[index] = Task.Run(async () => await Benchmark(cla.PingPongCountPerIteration, index2, cla.DebugMode));
+                tasks[index] = Task.Run(async () => await Benchmark(cla.PingPongCountPerIteration, index2, cla.DebugMode, cla.NewTask));
             }
             await Task.WhenAll(tasks);
 
             if (cla.DebugMode)
             {
-		        Console.WriteLine("Finished totally, took {0}.", DateTimeOffset.Now - start);
+		        Console.WriteLine("Finished totally({1}), took {0}s.", SinceInSeconds(start), GetVersionMark());
 	        } 
             else 
             {
-		        Console.WriteLine("{0},{1},{2},{3},{4}", "csharp", cla.Iterations, cla.PingPongCountPerIteration, cla.Iterations*cla.PingPongCountPerIteration, DateTimeOffset.Now - start);
+		        Console.WriteLine("{0},{1},{2},{3},{4}s", $"csharp({GetVersionMark()})", cla.Iterations, cla.PingPongCountPerIteration, cla.Iterations*cla.PingPongCountPerIteration, SinceInSeconds(start));
 	        }
+
+            string GetVersionMark()
+            {
+                return cla!.NewTask?"newTask":"noNewTask";
+            }
         }
 
         class CommandLineArg
@@ -72,6 +95,7 @@ namespace ChannelsTest {
             public int Iterations { get; private set; } = 10;
             public int PingPongCountPerIteration { get; private set; } = 100_0000;
             public bool DebugMode { get; private set; } = false;
+            public bool NewTask { get; private set; } = false;
 
             public static CommandLineArg Parse(string[] args)
             {
@@ -87,16 +111,16 @@ namespace ChannelsTest {
                     switch(args[index])
                     {
                         case "-iters":
-                            cla.Iterations = int.Parse(args[index+1]);
-                            ++index;
+                            cla.Iterations = int.Parse(args[++index]);
                             break;
                         case "-ppc":
-                            cla.PingPongCountPerIteration = int.Parse(args[index+1]);
-                            ++index;
+                            cla.PingPongCountPerIteration = int.Parse(args[++index]);
                             break;
                         case "-debug":
-                            cla.DebugMode = bool.Parse(args[index+1]);
-                            ++index;
+                            cla.DebugMode = bool.Parse(args[++index]);
+                            break;
+                        case "-newTask":
+                            cla.NewTask = bool.Parse(args[++index]);
                             break;
                         default:
                             break;
