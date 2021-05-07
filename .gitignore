@@ -1,7 +1,7 @@
 *.tar.gz
 *.exe
 *.dll
-debug.txt
+debug*.txt
 result.csv
 
 .vscode/*
