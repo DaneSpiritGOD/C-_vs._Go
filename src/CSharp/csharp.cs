@@ -7,8 +7,6 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Collections.Concurrent;
-using System.Diagnostics.CodeAnalysis;
-// [assembly: CLSCompliant(true)]
 
 namespace ChannelsTest {
     public class Program {
@@ -21,7 +19,7 @@ namespace ChannelsTest {
             var coreAction = GetAction();
             for (var i = 0; i < pingpongCount; i++) {
                 var output = CreateChannel();
-                coreAction(output, input);
+                _ = coreAction(output, input); // no await
                 input = output;
             }
 
@@ -31,7 +29,7 @@ namespace ChannelsTest {
                 Console.WriteLine("{0}th iteration finished: took {1}s, final value: {2}", iteration, SinceInSeconds(start), finalValue);                
             }
 
-            Action<ChannelWriter<int>, ChannelReader<int>> GetAction()
+            Func<ChannelWriter<int>, ChannelReader<int>, Task> GetAction()
             {
                 if (!newTask)
                 {
