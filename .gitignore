@@ -1,8 +1,7 @@
 *.tar.gz
 *.exe
 *.dll
-debug*.txt
-result*.csv
+test_results/*
 
 .vscode/*
 !.vscode/settings.json
