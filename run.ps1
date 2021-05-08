@@ -12,16 +12,16 @@ function Runbenchmark {
     $goPath,
     $csharpPath,
     $output,
-    $brandNewCsv = $false,
+    $csv = $false,
     $appendCsvSepeator = $false
   )
 
-  if ($brandNewCsv) {
-    Write-Output $(if($output.EndsWith(".csv")) { "lang,iters,ppc,iters*ppc,elapsed time" } else { $null }) > $output
-  }
+  if ($csv) {
+    Write-Output "lang,iters,ppc,iters*ppc,elapsed time" > $output
 
-  if ($appendCsvSepeator) {
-    Write-Output $(if($output.EndsWith(".csv")) { "-,-,-,-,-" } else { $null }) >> $output
+    if ($appendCsvSepeator) {
+      Write-Output "-,-,-,-,-" >> $output
+    }
   }
 
   Write-Host "running $iters*$ppc test(go)..."
@@ -36,15 +36,23 @@ function Runbenchmark {
   &$csharpPath -iters $iters -ppc $ppc -debug $csharpDebugValue -newTask true >> $output
 }
 
+Function GetTimeStamp() {
+  return (Get-Date).ToString("yyMMddHHmmss_fff")
+}
+
+$resultPathRoot = ".\test_results"
+$debugResultPath = Join-Path $resultPathRoot ("debug" + (GetTimeStamp) + ".txt")
+$resultPath = Join-Path $resultPathRoot ("result" + (GetTimeStamp) + ".csv")
+
 Write-Host "--------------------------------------debug mode--------------------------------------"
-Runbenchmark 10 1000000 $true ".\src\go\go.exe" ".\src\csharp\bin\Release\net5.0\csharp.exe" "debug_results.txt" $true
+Runbenchmark 10 1000000 $true ".\src\go\go.exe" ".\src\csharp\bin\Release\net5.0\csharp.exe" $debugResultPath
 
 Write-Host "--------------------------------------benchmark mode--------------------------------------"
-Runbenchmark 1 10000000 $false ".\src\go\go.exe" ".\src\csharp\bin\Release\net5.0\csharp.exe" "result.csv" $true
-Runbenchmark 10 1000000 $false ".\src\go\go.exe" ".\src\csharp\bin\Release\net5.0\csharp.exe" "result.csv" $false $true
-Runbenchmark 100 100000 $false ".\src\go\go.exe" ".\src\csharp\bin\Release\net5.0\csharp.exe" "result.csv" $false $true
-Runbenchmark 1000 10000 $false ".\src\go\go.exe" ".\src\csharp\bin\Release\net5.0\csharp.exe" "result.csv" $false $true
-Runbenchmark 10000 1000 $false ".\src\go\go.exe" ".\src\csharp\bin\Release\net5.0\csharp.exe" "result.csv" $false $true
-Runbenchmark 100000 100 $false ".\src\go\go.exe" ".\src\csharp\bin\Release\net5.0\csharp.exe" "result.csv" $false $true
-Runbenchmark 1000000 10 $false ".\src\go\go.exe" ".\src\csharp\bin\Release\net5.0\csharp.exe" "result.csv" $false $true
-Runbenchmark 10000000 1 $false ".\src\go\go.exe" ".\src\csharp\bin\Release\net5.0\csharp.exe" "result.csv" $false $true
+Runbenchmark 1 10000000 $false ".\src\go\go.exe" ".\src\csharp\bin\Release\net5.0\csharp.exe" $resultPath $true
+Runbenchmark 10 1000000 $false ".\src\go\go.exe" ".\src\csharp\bin\Release\net5.0\csharp.exe" $resultPath $false $true
+Runbenchmark 100 100000 $false ".\src\go\go.exe" ".\src\csharp\bin\Release\net5.0\csharp.exe" $resultPath $false $true
+Runbenchmark 1000 10000 $false ".\src\go\go.exe" ".\src\csharp\bin\Release\net5.0\csharp.exe" $resultPath $false $true
+Runbenchmark 10000 1000 $false ".\src\go\go.exe" ".\src\csharp\bin\Release\net5.0\csharp.exe" $resultPath $false $true
+Runbenchmark 100000 100 $false ".\src\go\go.exe" ".\src\csharp\bin\Release\net5.0\csharp.exe" $resultPath $false $true
+Runbenchmark 1000000 10 $false ".\src\go\go.exe" ".\src\csharp\bin\Release\net5.0\csharp.exe" $resultPath $false $true
+Runbenchmark 10000000 1 $false ".\src\go\go.exe" ".\src\csharp\bin\Release\net5.0\csharp.exe" $resultPath $false $true
