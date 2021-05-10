@@ -19,7 +19,9 @@ namespace ChannelsTest {
             var coreAction = GetAction();
             for (var i = 0; i < pingpongCount; i++) {
                 var output = CreateChannel();
-                _ = coreAction(output, input); // no await
+                //_ = coreAction(output, input); // no await
+                await coreAction(output, input); // await
+
                 input = output;
             }
 
