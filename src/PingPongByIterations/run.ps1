@@ -1,15 +1,15 @@
-Write-Host "building go version..."
-go build -o .\src\go\main.exe .\src\go\main.go
+$goExePath = ".\go\main.exe"
+$csExeNoUseAwaitPath = ".\csharp\bin\no_use_await\csharp.exe"
+$csExeUseAwaitPath = ".\csharp\bin\use_await\csharp.exe"
 
-Write-Host "building c#/USE_AWAIT version..."
-dotnet publish -c Release -r win-x64 -p:DefineConstants=USE_AWAIT -o .\src\csharp\bin\use_await .\src\csharp\csharp.csproj
+Write-Host "building go version..."
+go build -o $goExePath .\go\main.go
 
 Write-Host "building c#/NO_USE_AWAIT version..."
-dotnet publish -c Release -r win-x64 -p:DefineConstants=NO_USE_AWAIT -o .\src\csharp\bin\no_use_await .\src\csharp\csharp.csproj
+dotnet publish -c Release -r win-x64 -p:DefineConstants=NO_USE_AWAIT -o ([System.IO.Path]::GetDirectoryName($csExeNoUseAwaitPath)) .\csharp\csharp.csproj
 
-$goExePath = ".\src\go\main.exe"
-$csExeNoUseAwaitPath = ".\src\csharp\bin\no_use_await\csharp.exe"
-$csExeUseAwaitPath = ".\src\csharp\bin\use_await\csharp.exe"
+Write-Host "building c#/USE_AWAIT version..."
+dotnet publish -c Release -r win-x64 -p:DefineConstants=USE_AWAIT -o ([System.IO.Path]::GetDirectoryName($csExeUseAwaitPath)) .\csharp\csharp.csproj
 
 function Runbenchmark {
   param(
@@ -51,9 +51,9 @@ Function GetTimeStamp() {
   return (Get-Date).ToString("yyMMddHHmmss_fff")
 }
 
-$resultPathRoot = ".\test_results"
-$debugResultPath = Join-Path $resultPathRoot ("debug" + (GetTimeStamp) + ".txt")
-$resultPath = Join-Path $resultPathRoot ("result" + (GetTimeStamp) + ".csv")
+$resultPathRoot = "..\..\test_results"
+$debugResultPath = Join-Path $resultPathRoot ("ppi_debug" + (GetTimeStamp) + ".txt")
+$resultPath = Join-Path $resultPathRoot ("ppi_result" + (GetTimeStamp) + ".csv")
 
 if (!(Test-Path $resultPathRoot)) { mkdir $resultPathRoot}
 
