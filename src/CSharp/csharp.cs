@@ -7,6 +7,7 @@ using System.Threading.Channels;
 using System.Threading.Tasks;
 using System.Threading;
 using System.Collections.Concurrent;
+using System.Text;
 
 namespace ChannelsTest {
     public class Program {
@@ -19,8 +20,12 @@ namespace ChannelsTest {
             var coreAction = GetAction();
             for (var i = 0; i < pingpongCount; i++) {
                 var output = CreateChannel();
-                //_ = coreAction(output, input); // no await
-                await coreAction(output, input); // await
+
+                #if USE_AWAIT
+                    await coreAction(output, input); // await
+                #else
+                    _ = coreAction(output, input); // no await
+                #endif
 
                 input = output;
             }
@@ -81,12 +86,22 @@ namespace ChannelsTest {
 	        } 
             else 
             {
-		        Console.WriteLine("{0},{1},{2},{3},{4}s", $"csharp({GetVersionMark()})", cla.Iterations, cla.PingPongCountPerIteration, cla.Iterations*cla.PingPongCountPerIteration, SinceInSeconds(start));
+		        Console.WriteLine("{0},{1},{2},{3},{4},{5}s", "csharp", GetVersionMark(), cla.Iterations, cla.PingPongCountPerIteration, cla.Iterations*cla.PingPongCountPerIteration, SinceInSeconds(start));
 	        }
 
             string GetVersionMark()
             {
-                return cla!.NewTask?"newTask":"noNewTask";
+                var sb = new StringBuilder();
+                sb.Append(cla!.NewTask?"newTask":"noNewTask");
+                sb.Append(';');
+
+                #if USE_AWAIT
+                sb.Append("use_await");
+                #else
+                sb.Append("no_use_await");
+                #endif
+
+                return sb.ToString();
             }
         }
 

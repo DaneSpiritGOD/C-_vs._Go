@@ -1,3 +1,3 @@
-module github.com/DaneSpiritGOD/gomain
+module github.com/DaneSpiritGOD/csharpGoBenchmark
 
 go 1.16

@@ -66,6 +66,6 @@ func main() {
 	if debugMode2 {
 		fmt.Printf("Finished totally, took %s.\n", time.Since(start))
 	} else {
-		fmt.Printf("%s,%d,%d,%d,%s", "go", iterationCount, pingpongCount, iterationCount*pingpongCount, time.Since(start))
+		fmt.Printf("%s,%s,%d,%d,%d,%s", "go", "", iterationCount, pingpongCount, iterationCount*pingpongCount, time.Since(start))
 	}
 }
